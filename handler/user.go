@@ -3,6 +3,7 @@ package handler
 import (
 	"bwastartup/helper"
 	"bwastartup/user"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -103,4 +104,42 @@ func (h *UserHandler) CheckEmailAvailbility(c *gin.Context) {
 
 	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *UserHandler) UploadAvatar(c *gin.Context) {
+	//Ambil file dari input
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "Error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	userID := 1
+	//Deklarasi variabel path file dengan nama file
+	// path := "images/" + file.Filename
+	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "Error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	
+	
+	_, err = h.userService.SaveAvatar(userID, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "Error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+		response := helper.APIResponse("Succes Upload Avatar", http.StatusOK, "Success", data)
+		c.JSON(http.StatusOK, response)
+
 }
